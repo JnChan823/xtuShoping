@@ -11,7 +11,7 @@ import CategoryPanel from './componets/CategoryPanel.vue'
 import HotPanel from './componets/HotPanel.vue'
 import XtxGuess from '@/components/XtxGuess.vue'
 import type { XtxGuessInstance } from '@/types/components'
-
+import { useGuessList } from '@/composables/index'
 //获取轮播图数据
 const bannerList = ref<BannerItem[]>([])
 const getHomeBannerData = async () => {
@@ -39,12 +39,9 @@ onLoad(() => {
   Promise.all([getHomeBannerData(), getHomeCategoryData(), getHomeHotData()])
   isLoading.value = false
 })
-//获取猜你喜欢实例
-const guessRef = ref<XtxGuessInstance>()
-//滚动触底
-const onScrolltolower = () => {
-  guessRef.value?.getMore()
-}
+// 猜你喜欢组合式函数
+const { guessRef, onScrolltolower } = useGuessList()
+
 const isTriggered = ref(false)
 //自定义下拉刷新被触发
 const onRefresherrefresh = async () => {
