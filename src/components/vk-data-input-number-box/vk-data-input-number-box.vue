@@ -11,7 +11,6 @@
         fontSize: size + 'rpx',
         minHeight: '1.4em',
       }"
-      @click="emptyClick"
       @touchstart.prevent="btnTouchStart('minus')"
       @touchend.stop.prevent="clearTimer"
     >
@@ -32,7 +31,6 @@
         width: inputWidth + 'rpx',
       }"
       @blur="onBlur"
-      @click="showInput = true"
     />
     <view
       class="u-icon-plus"
@@ -44,7 +42,6 @@
         fontSize: size + 'rpx',
         minHeight: '1.4em',
       }"
-      @click="emptyClick"
       @touchstart.prevent="btnTouchStart('plus')"
       @touchend.stop.prevent="clearTimer"
     >
@@ -52,6 +49,7 @@
     </view>
   </view>
 </template>
+
 <script>
 /* eslint-disable */
 /**
@@ -97,7 +95,7 @@ export default {
     // 背景颜色
     bgColor: {
       type: String,
-      default: '#FFFFFF',
+      default: '#F2F3F5',
     },
     // 最小值
     min: {
@@ -235,7 +233,6 @@ export default {
       timer: null, // 用作长按的定时器
       changeFromInner: false, // 值发生变化，是来自内部还是外部
       innerChangeTimer: null, // 内部定时器
-      showInput: false,
     }
   },
   created() {
@@ -246,6 +243,10 @@ export default {
       // #ifndef VUE3
       return this.value
       // #endif
+
+      // #ifdef VUE3
+      return this.modelValue
+      // #endif
     },
     getCursorSpacing() {
       // 先将值转为px单位，再转为数值
@@ -253,9 +254,7 @@ export default {
     },
   },
   methods: {
-    // 空点击事件，主要用于解决PC端H5由于无click事件导致触摸位置不准确的问题
-    emptyClick() {},
-    // 触摸事件开始
+    // 点击退格键
     btnTouchStart(callback) {
       // 先执行一遍方法，否则会造成松开手时，就执行了clearTimer，导致无法实现功能
       this[callback]()
@@ -268,18 +267,15 @@ export default {
         this[callback]()
       }, this.pressTime)
     },
-    // 清除定时器
     clearTimer() {
       this.$nextTick(() => {
         clearInterval(this.timer)
         this.timer = null
       })
     },
-    // 减
     minus() {
       this.computeVal('minus')
     },
-    // 加
     plus() {
       this.computeVal('plus')
     },
@@ -417,21 +413,16 @@ export default {
 .vk-data-input-number-box {
   display: inline-flex;
   align-items: center;
-  box-sizing: border-box;
 }
 
 .u-number-input {
   position: relative;
   text-align: center;
   padding: 0;
-  margin: 0rpx;
+  margin: 0 6rpx;
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 2rpx solid #f4f4f4;
-  border-left: 0;
-  border-right: 0;
-  box-sizing: border-box;
 }
 
 .u-icon-plus,
@@ -440,8 +431,6 @@ export default {
   display: flex;
   justify-content: center;
   align-items: center;
-  border: 2rpx solid #f4f4f4;
-  box-sizing: border-box;
 }
 
 .u-icon-plus {
@@ -454,7 +443,7 @@ export default {
 
 .u-icon-disabled {
   color: #c8c9cc !important;
-  background-color: #f2f3f5 !important;
+  background: #f7f8fa !important;
 }
 
 .u-input-disabled {
@@ -463,6 +452,7 @@ export default {
 }
 .num-btn {
   font-weight: 550;
-  line-height: 50rpx;
+  position: relative;
+  top: -4rpx;
 }
 </style>

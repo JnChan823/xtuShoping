@@ -35,7 +35,8 @@ const loginSuccess = (profile: LoginResult) => {
   //为了看到登录成功提示,延迟半秒钟再跳转
   setTimeout(() => {
     //页面跳转
-    uni.switchTab({ url: '/pages/my/my' })
+    // uni.switchTab({ url: '/pages/my/my' })
+    uni.navigateBack()
   }, 500)
 }
 </script>
