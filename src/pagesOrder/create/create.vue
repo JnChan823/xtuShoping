@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { getMemberOrderPreAPI } from '@/services/order'
+import { getMemberOrderPreAPI, getMemberOrderPreNowAPI } from '@/services/order'
 import { onLoad } from '@dcloudio/uni-app'
 import { computed, ref } from 'vue'
 import type { OrderPreResult } from '@/types/order'
+import { useAddressStore } from '@/stores/modules/address'
 // 获取屏幕边界到安全区域距离
 const { safeAreaInsets } = uni.getSystemInfoSync()
 // 订单备注
@@ -21,17 +22,35 @@ const activeDelivery = computed(() => deliveryList.value[activeIndex.value])
 const onChangeDelivery: UniHelper.SelectorPickerOnChange = (ev) => {
   activeIndex.value = ev.detail.value
 }
-
+//页面参数
+const query = defineProps<{
+  skuId?: string
+  count?: string
+  addressId?: string
+}>()
 //获取订单信息
 const orderPre = ref<OrderPreResult>()
 const getMemberOrderPreData = async () => {
-  const res = await getMemberOrderPreAPI()
-  orderPre.value = res.result
-  console.log(res)
+  if (query.skuId && query.count && query.addressId) {
+    const res = await getMemberOrderPreNowAPI({
+      count: query.count,
+      skuId: query.skuId,
+      addressId: query.addressId,
+    })
+    orderPre.value = res.result
+  } else {
+    const res = await getMemberOrderPreAPI()
+    orderPre.value = res.result
+  }
 }
 //页面初始化加载
 onLoad(() => {
   getMemberOrderPreData()
+})
+const addressStore = useAddressStore()
+//收货地址
+const selectedAddress = computed(() => {
+  return addressStore.selectedAddress || orderPre.value?.userAddresses.find((v) => v.isDefault)
 })
 </script>
 
@@ -39,13 +58,15 @@ onLoad(() => {
   <scroll-view scroll-y class="viewport">
     <!-- 收货地址 -->
     <navigator
-      v-if="false"
+      v-if="selectedAddress"
       class="shipment"
       hover-class="none"
       url="/pagesMember/address/address?from=order"
     >
-      <view class="user"> 张三 13333333333 </view>
-      <view class="address"> 广东省 广州市 天河区 黑马程序员3 </view>
+      <view class="user"> {{ selectedAddress.receiver }} {{ selectedAddress.contact }} </view>
+      <view class="address">
+        {{ selectedAddress.fullLocation }} {{ selectedAddress.address }}
+      </view>
       <text class="icon icon-right"></text>
     </navigator>
     <navigator
@@ -67,18 +88,15 @@ onLoad(() => {
         class="item"
         hover-class="none"
       >
-        <image
-          class="picture"
-          :src="item.picture"
-        />
+        <image class="picture" :src="item.picture" />
         <view class="meta">
-          <view class="name ellipsis"> {{item.name}} </view>
-          <view class="attrs">{{item.attrsText}}</view>
+          <view class="name ellipsis"> {{ item.name }} </view>
+          <view class="attrs">{{ item.attrsText }}</view>
           <view class="prices">
-            <view class="pay-price symbol">{{item.payPrice}}</view>
-            <view class="price symbol">{{item.price}}</view>
+            <view class="pay-price symbol">{{ item.payPrice }}</view>
+            <view class="price symbol">{{ item.price }}</view>
           </view>
-          <view class="count">x{{item.count}}</view>
+          <view class="count">x{{ item.count }}</view>
         </view>
       </navigator>
     </view>
@@ -106,11 +124,11 @@ onLoad(() => {
     <view class="settlement">
       <view class="item">
         <text class="text">商品总价: </text>
-        <text class="number symbol">{{orderPre?.summary.totalPrice.toFixed(2)}}</text>
+        <text class="number symbol">{{ orderPre?.summary.totalPrice.toFixed(2) }}</text>
       </view>
       <view class="item">
         <text class="text">运费: </text>
-        <text class="number symbol">{{orderPre?.summary.postFee.toFixed(2)}}</text>
+        <text class="number symbol">{{ orderPre?.summary.postFee.toFixed(2) }}</text>
       </view>
     </view>
   </scroll-view>
@@ -118,7 +136,7 @@ onLoad(() => {
   <!-- 吸底工具栏 -->
   <view class="toolbar" :style="{ paddingBottom: safeAreaInsets?.bottom + 'px' }">
     <view class="total-pay symbol">
-      <text class="number">{{orderPre?.summary.totalPayPrice.toFixed(2)}}</text>
+      <text class="number">{{ orderPre?.summary.totalPayPrice.toFixed(2) }}</text>
     </view>
     <view class="button" :class="{ disabled: true }"> 提交订单 </view>
   </view>
